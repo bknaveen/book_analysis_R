@@ -1,6 +1,6 @@
 ---
-title: "Book dataset Analysis"
-author: "Nabin B K"
+title: "Book data set Analysis"
+author: "Nabin B K / 30476867"
 date: "2025-05-28"
 output:
   word_document: default
@@ -8,10 +8,6 @@ output:
   pdf_document: default
 always_allow_html: true
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 #1. Setup necessary library
 ```{r}
@@ -39,10 +35,14 @@ user_df <- read.csv("/Volumes/Drive S/college/lecture slides/data science/book r
 #display columns names
 print(colnames(book_df))
 ```
+
+
 ```{r }
 #display columns for rating dataset
 print(colnames(rating_df))
 ```
+
+
 
 ```{r }
 #display columns user dataset
