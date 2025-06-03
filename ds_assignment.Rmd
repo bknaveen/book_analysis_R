@@ -73,38 +73,38 @@ print(sum(is.na(book_df)))
 
 ```{r }
 #check null value of rating data-frame
-print(sum(is.na(rating_df)))
+cat(sum(is.na(rating_df)))
 ```
 
 ```{r }
 #check null value of user data-frame
-print(sum(is.na(user_df)))
+cat(sum(is.na(user_df)))
 ```
 
 
 ```{r }
 #view null value inside user_df
-print(str(user_df$Age))
+cat(str(user_df$Age))
 
 ```
 
 ```{r }
 #remove this nuill value form Age cloumns
 user_df <- user_df[!is.na(user_df$Age), ]
-print(str(user_df$Age))
+cat(str(user_df$Age))
 ```
 
 #6. confrim again null values presents or not
 
 ```{r }
 #again check null value
-print(sum(is.na(user_df)))
+cat(sum(is.na(user_df)))
 ```
 
 
 #7: Question number one: 
 Q1. Write the code to calculate the average book rating for each publisher. en, tabulate the result for
-the top 20 publishers (kable/kableextra would be desired). Using a bar chart, visualise the average
+the top 20 publishers (kable / kableextra would be desired). Using a bar chart, visualise the average
 rating for the top 10 publishers with the most ratings. You can choose to use either RatingPGA or
 RatingPGB, or both. Explain your findings.
 
@@ -112,13 +112,13 @@ RatingPGB, or both. Explain your findings.
 # merged datasets by their join key
 merged_df <- merge(rating_df, user_df, by = "User.ID")
 merged_df <- merge(merged_df, book_df, by = "ISBN")
-# Remove rows with missing age
+# remove rows with missing age
 merged_clean <- merged_df %>% filter(!is.na(Age), !is.na(Publisher), !is.na(Book.Rating))
-# Define RatingPGA (Age < 30)
+# define RatingPGA (Age < 30)
 RatingPGA <- merged_clean %>% filter(Age < 30)
-# Define RatingPGB (Age >= 30)
+# define RatingPGB (Age >= 30)
 RatingPGB <- merged_clean %>% filter(Age >= 30)
-# Calculate average rating and count of ratings per publisher
+# calculate average rating and count of ratings per publisher
 publisher_stats <- RatingPGA %>%
   group_by(Publisher) %>%
   summarise(
@@ -126,7 +126,7 @@ publisher_stats <- RatingPGA %>%
     RatingCount = n()
   ) %>%
   arrange(desc(AvgRating))
-# Top 20 publishers by average rating
+# top 20 publishers by average rating
 top20_publishers <- publisher_stats %>% top_n(20, AvgRating)
 # display as a styled HTML table
 kable(top20_publishers, caption = "Top 20 Publishers by Average Rating")
