@@ -73,32 +73,32 @@ print(sum(is.na(book_df)))
 
 ```{r }
 #check null value of rating data-frame
-cat(sum(is.na(rating_df)))
+print(sum(is.na(rating_df)))
 ```
 
 ```{r }
 #check null value of user data-frame
-cat(sum(is.na(user_df)))
+print(sum(is.na(user_df)))
 ```
 
 
 ```{r }
 #view null value inside user_df
-cat(str(user_df$Age))
+print(str(user_df$Age))
 
 ```
 
 ```{r }
 #remove this nuill value form Age cloumns
 user_df <- user_df[!is.na(user_df$Age), ]
-cat(str(user_df$Age))
+print(str(user_df$Age))
 ```
 
 #6. confrim again null values presents or not
 
 ```{r }
 #again check null value
-cat(sum(is.na(user_df)))
+print(sum(is.na(user_df)))
 ```
 
 
@@ -209,6 +209,19 @@ ggplot(sampled_df, aes(x = AgeGroup, y = Book.Rating, fill = AgeGroup)) +
   labs(title = "Book Ratings Across Age Groups", x = "Age Group", y = "Book Rating") +
   theme_minimal()
 ```
+```{r}
+# Using your sampled_df or merged_df with AgeGroup and Book.Rating columns
+ggplot(merged_df, aes(x = Book.Rating, color = AgeGroup, fill = AgeGroup)) +
+  geom_density(alpha = 0.3) +  # Density plot with transparency
+  labs(
+    title = "Density Distribution of Book Ratings by Age Group",
+    x = "Book Rating",
+    y = "Density"
+  ) +
+  theme_minimal() +
+  theme(legend.title = element_blank())
+
+```
 
 # tabulate the distributions of this results
 ```{R}
@@ -250,17 +263,22 @@ result. Is there any diﬀerence between the 2 datasets? (RatingPGA and RatingPG
 
 #code according to question number three
 ```{r}
+```
+
+```{r}
 # clean and extract country location (assuming "City, State, Country" format)
 merged_df$Country <- trimws(sapply(strsplit(as.character(merged_df$Location), ","), tail, 1))
 # define RatingPGA = users under 30
 RatingPGA <- merged_df %>% filter(Age < 30 & !is.na(Age))
-head(RatingPGA)
+#display top 10 rows from RatingPGA
+head(RatingPGA,10)
 ```
 
 ```{r}
 # define RatingPGB = users 30 and above
 RatingPGB <- merged_df %>% filter(Age >= 30 & !is.na(Age))
-head(RatingPGB)
+#display top 10 RatingPGB
+head(RatingPGB,10)
 ```
 
 # calulate average ratings 
@@ -275,13 +293,14 @@ avg_rating_PGB <- RatingPGB %>%
   group_by(Country) %>%
   summarise(AvgRating = mean(Book.Rating, na.rm = TRUE), Count = n()) %>%
   filter(Count >= 10)
-#print top 5 rows of average RatingPGA
-head(avg_rating_PGA)
+#print top 10 rows of average RatingPGA
+head(avg_rating_PGA, 10)
 ```
+
 # top five rows for ratingPGB
 ```{r}
-#print top 5 rows of average RatingPGB
-head(avg_rating_PGB)
+#print top 10 rows of average RatingPGB
+head(avg_rating_PGB, 10)
 ```
 
 #plot top five countries
