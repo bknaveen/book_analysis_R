@@ -351,7 +351,6 @@ investigate the relationship between user age and ratings, and present your find
 showing the average ratings for diﬀerent age groups. Compare the results of the two datasets.
 
 
-
 # code aacording to the questions
 ```{r}
 # Filter books published after 2000
@@ -378,11 +377,13 @@ avg_rating_A <- df_A %>%
 avg_rating_B <- df_B %>%
   group_by(AgeGroup) %>%
   summarise(AvgRating = mean(Book.Rating), Count = n())
+#display result
 print(avg_rating_A)
 ```
 
 #print rating average RatingPGB
 ```{r}
+#display result
 print(avg_rating_B)
 ```
 
@@ -394,7 +395,7 @@ avg_rating_A$Dataset <- "Dataset A"
 avg_rating_B$Dataset <- "Dataset B"
 # Combine for plotting
 combined_avg <- rbind(avg_rating_A, avg_rating_B)
-#removed NA value
+#removed NA values in the existing table "combined_avg"
 combined_avg <- na.omit(combined_avg)  # removes any rows with NA in any column
 #plot the results
 ggplot(combined_avg, aes(x = AgeGroup, y = AvgRating, fill = Dataset)) +
@@ -413,15 +414,14 @@ ggplot(combined_avg, aes(x = AgeGroup, y = AvgRating, fill = Dataset)) +
     fill = "Dataset: "
   ) +
   theme_minimal(base_size = 11) +
-  theme(
+  theme( #them() are the customize elements for the plot
     plot.title = element_text(face = "bold", size = 14),
     plot.subtitle = element_text(size = 13),
     legend.position = "top",
     axis.text.x = element_text(face = "bold"),
     axis.text.y = element_text(face = "bold")
   ) +
-  ylim(0, max(combined_avg$AvgRating, na.rm = TRUE) + 1)
-
+  ylim(0, max(combined_avg$AvgRating, na.rm = TRUE) + 1) #manually set y-axis limit
 ```
 
 # Analysis part
