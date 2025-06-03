@@ -1,0 +1,446 @@
+---
+title: "Book dataset Analysis"
+author: "Nabin B K"
+date: "2025-05-28"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#1. Setup necessary library
+```{r}
+#import necessary library
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(httr)
+library(tidyr)
+```
+
+#2. Load datasets (book, rating and user)
+
+```{r }
+#load data set file (csv) form the device
+book_df <- read.csv("/Volumes/Drive S/college/lecture slides/data science/book recomendation/Books.csv")
+rating_df <- read.csv("/Volumes/Drive S/college/lecture slides/data science/book recomendation/Ratings.csv")
+user_df <- read.csv("/Volumes/Drive S/college/lecture slides/data science/book recomendation/Users.csv")
+```
+
+#3. display the datasets colmuns names 
+```{r }
+#display columns names
+print(colnames(book_df))
+```
+```{r }
+#display columns for rating dataset
+print(colnames(rating_df))
+```
+
+```{r }
+#display columns user dataset
+print(colnames(user_df))
+```
+
+#4. show compact internal summary of datasets
+```{r }
+#disply structure of book data-frame using str() function
+print(str(book_df))
+```
+
+```{r }
+#disply structure of rating data-frame using str() function
+print(str(rating_df))
+```
+
+```{r }
+##disply structure of user data-frame using str() function
+print(str(user_df))
+```
+
+#5. check null or missing value in datasets
+```{r }
+#check null value of book data-frame
+print(sum(is.na(book_df)))
+```
+
+```{r }
+#check null value of rating data-frame
+print(sum(is.na(rating_df)))
+```
+
+```{r }
+#check null value of user data-frame
+print(sum(is.na(user_df)))
+```
+
+
+```{r }
+#view null value inside user_df
+print(str(user_df$Age))
+
+```
+
+```{r }
+#remove this nuill value form Age cloumns
+user_df <- user_df[!is.na(user_df$Age), ]
+print(str(user_df$Age))
+```
+
+#6. confrim again null values presents or not
+
+```{r }
+#again check null value
+print(sum(is.na(user_df)))
+```
+
+
+#7: Question number one: 
+Q1. Write the code to calculate the average book rating for each publisher. en, tabulate the result for
+the top 20 publishers (kable/kableextra would be desired). Using a bar chart, visualise the average
+rating for the top 10 publishers with the most ratings. You can choose to use either RatingPGA or
+RatingPGB, or both. Explain your findings.
+
+```{r}
+# merged datasets by their join key
+merged_df <- merge(rating_df, user_df, by = "User.ID")
+merged_df <- merge(merged_df, book_df, by = "ISBN")
+# Remove rows with missing age
+merged_clean <- merged_df %>% filter(!is.na(Age), !is.na(Publisher), !is.na(Book.Rating))
+# Define RatingPGA (Age < 30)
+RatingPGA <- merged_clean %>% filter(Age < 30)
+# Define RatingPGB (Age >= 30)
+RatingPGB <- merged_clean %>% filter(Age >= 30)
+# Calculate average rating and count of ratings per publisher
+publisher_stats <- RatingPGA %>%
+  group_by(Publisher) %>%
+  summarise(
+    AvgRating = round(mean(Book.Rating, na.rm = TRUE), 2),
+    RatingCount = n()
+  ) %>%
+  arrange(desc(AvgRating))
+# Top 20 publishers by average rating
+top20_publishers <- publisher_stats %>% top_n(20, AvgRating)
+# display as a styled HTML table
+kable(top20_publishers, caption = "Top 20 Publishers by Average Rating")
+```
+
+
+# Visualize the results using bar plot
+```{r}
+# Top 10 publishers by number of ratings (for bar chart)
+top10_by_count <- publisher_stats %>%
+  slice_max(order_by = RatingCount, n = 10) #slice() sleect highest row with specific values
+#create a ggplot object with 'top10_by_count' dataset
+ggplot(top10_by_count, aes(x = reorder(Publisher, AvgRating), y = AvgRating, fill = Publisher)) +
+  geom_bar(stat = "identity", width = 0.6) +
+  geom_text(aes(label = round(AvgRating, 2)), hjust = -0.1, size = 3.5, color = "black") +
+  coord_flip() +  # Flip x and y to make horizontal bars
+  labs(title = "Top 10 Publishers with most ratings (RatingPGA)",
+    x = "Publisher",
+    y = "Average Rating"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "none",  # remove legend (redundant)
+    plot.title = element_text(hjust = 0.5),
+    axis.text.y = element_text(size = 10)
+  ) +
+  scale_y_continuous(limits = c(0, 10), expand = expansion(mult = c(0, 0.05)))
+```
+
+# analysis of this part
+
+
+#8 Question number two:
+Analyse the distribution of book ratings by user age groupsfor example, ”0-18”, ”19-30”, ”31-45”, ”46-
+60”, ”61+”. Visualise the distribution using a boxplot, with ‘Age‘ on the x-axis and ‘Book-Rating‘ on
+the y-axis. You can choose to use either RatingPGA or RatingPGB or both. Explain your findings.
+For this question, do NOT use tidyverse and only use the base R function.
+
+
+# code according to the questions
+```{r }
+# Merge user and rating data
+merged_df <- merge(rating_df, user_df, by = "User.ID")
+# create Age Groups
+merged_df$AgeGroup <- cut( #where cuts divided numeric vectors in intevals
+  merged_df$Age,
+  breaks = c(-Inf, 18, 30, 45, 60, Inf),
+  labels = c("0-18", "19-30", "31-45", "46-60", "61+"),
+  right = TRUE
+)
+# display top 5 merged data frames.
+print(head(merged_df))
+```
+
+```{r}
+#according to table there exist NA value we need to remove this na value and fill with average one
+#filter this one here
+merged_df <- merged_df %>%
+  filter(!is.na(Age), !is.na(AgeGroup))
+# display top 5 rows after filtering
+head(merged_df)
+```
+
+# Visualize the result in box plot with densy layers
+```{r}
+#generate random number
+set.seed(123) 
+# Sample 500 rows from merged_df (only rows with non-NA AgeGroup)
+sampled_df <- merged_df[!is.na(merged_df$AgeGroup), ]
+# Adjust sample dynamically
+sample_size <- min(nrow(sampled_df), 500)  
+#shuffling the rows and picking up random samples
+sampled_df <- sampled_df[sample(nrow(sampled_df), sample_size), ]
+
+# create a detailed boxplot with median, Q1, Q3, and outliers explicitly shown
+ggplot(sampled_df, aes(x = AgeGroup, y = Book.Rating, fill = AgeGroup)) +
+  geom_violin(alpha = 0.2) +  # Violin plot for smooth density visualization
+  geom_boxplot(width = 0.2, fill = "lightblue", color = "#f1c21b", outlier.color = "#ff832b") +
+  stat_summary(fun = mean, geom = "point", shape = 20, size = 3, color = "#198038") +
+  labs(title = "Book Ratings Across Age Groups", x = "Age Group", y = "Book Rating") +
+  theme_minimal()
+```
+
+# tabulate the distributions of this results
+```{R}
+#Create counts of ratings per AgeGroup
+age_counts <- table(merged_df$AgeGroup)
+# Mean rating per age group
+mean_ratings <- aggregate(Book.Rating ~ AgeGroup, data=merged_df, mean)
+# Median rating per age group
+median_ratings <- aggregate(Book.Rating ~ AgeGroup, data=merged_df, median)
+# Standard deviation per age group
+std_ratings <- aggregate(Book.Rating ~ AgeGroup, data=merged_df, sd)
+# Min and Max per age group
+min_ratings <- aggregate(Book.Rating ~ AgeGroup, data=merged_df, min)
+max_ratings <- aggregate(Book.Rating ~ AgeGroup, data=merged_df, max)
+# 25th and 75th percentiles per age group
+quantile_25 <- tapply(merged_df$Book.Rating, merged_df$AgeGroup, function(x) quantile(x, 0.25))
+quantile_75 <- tapply(merged_df$Book.Rating, merged_df$AgeGroup, function(x) quantile(x, 0.75))
+# Combine into a data frame
+distribution_df <- data.frame(
+  AgeGroup = names(age_counts),
+  Count = as.vector(age_counts),
+  Mean = round(mean_ratings$Book.Rating, 2),
+  Median = median_ratings$Book.Rating,
+  StdDev = round(std_ratings$Book.Rating, 2),
+  Min = min_ratings$Book.Rating,
+  Q25 = quantile_25,
+  Q75 = quantile_75,
+  Max = max_ratings$Book.Rating
+)
+# display
+print(distribution_df)
+```
+
+#9 Question Number Three:
+Find out how the average book rating varies by location (country level) and tabulate them. Visualise
+the top 5 countries with the highest average ratings using a bar chart for the 2 datasets. Discuss the
+result. Is there any diﬀerence between the 2 datasets? (RatingPGA and RatingPGB)
+
+
+#code according to question number three
+```{r}
+# clean and extract country location (assuming "City, State, Country" format)
+merged_df$Country <- trimws(sapply(strsplit(as.character(merged_df$Location), ","), tail, 1))
+# define RatingPGA = users under 30
+RatingPGA <- merged_df %>% filter(Age < 30 & !is.na(Age))
+head(RatingPGA)
+```
+
+```{r}
+# define RatingPGB = users 30 and above
+RatingPGB <- merged_df %>% filter(Age >= 30 & !is.na(Age))
+head(RatingPGB)
+```
+
+# calulate average ratings 
+```{r}
+# Average ratings by country for RatingPGA
+avg_rating_PGA <- RatingPGA %>%
+  group_by(Country) %>%
+  summarise(AvgRating = mean(Book.Rating, na.rm = TRUE), Count = n()) %>%
+  filter(Count >= 10) #filter out countries with very few ratings
+# Average ratings by country for RatingPGB
+avg_rating_PGB <- RatingPGB %>%
+  group_by(Country) %>%
+  summarise(AvgRating = mean(Book.Rating, na.rm = TRUE), Count = n()) %>%
+  filter(Count >= 10)
+#print top 5 rows of average RatingPGA
+head(avg_rating_PGA)
+```
+# top five rows for ratingPGB
+```{r}
+#print top 5 rows of average RatingPGB
+head(avg_rating_PGB)
+```
+
+#plot top five countries
+```{r}
+# top 5 countries with highest average ratings
+top5_PGA <- avg_rating_PGA %>% arrange(desc(AvgRating)) %>% head(5)
+# Bar plot for RatingPGA
+ggplot(top5_PGA, aes(x = reorder(Country, AvgRating), y = AvgRating)) +
+  geom_bar(stat = "identity", fill = "orange") +
+  geom_text(aes(label = round(AvgRating, 2)), 
+            hjust = -0.2, color = "#198038", size = 4.5) +
+  coord_flip() +
+  labs(
+    title = "Top 5 Countries - RatingPGA (Under 30)",
+    x = "Location (Country)",
+    y = "Average Rating"
+  ) +
+  theme_minimal() +
+  ylim(0, max(top5_PGA$AvgRating) + 1)  # give space for label visibility
+
+```
+# Visualized the result based on RatingPGB
+```{r}
+top5_PGB <- avg_rating_PGB %>% arrange(desc(AvgRating)) %>% head(5)
+# Bar plot for RatingPGB
+ggplot(top5_PGB, aes(x = reorder(Country, AvgRating), y = AvgRating)) +
+  geom_bar(stat = "identity", fill = "#fa4d56") +
+  geom_text(aes(label = round(AvgRating, 2)), 
+            hjust = -0.1, color = "#a56eff", size = 4.5) +
+  coord_flip() +
+  labs(
+    title = "Top 5 Countries - RatingPGB (Above 30)",
+    x = "Location (Country)",
+    y = "Average Rating"
+  ) +
+  theme_minimal() +
+  ylim(0, max(top5_PGA$AvgRating) + 1)  # Give space for label visibility
+
+```
+
+# Analysis of this part
+
+
+
+#10: Question number Four:
+Explore how book ratings vary by user age for books published aﬅer 2000. Use the data available to
+investigate the relationship between user age and ratings, and present your findings in a bar chart
+showing the average ratings for diﬀerent age groups. Compare the results of the two datasets.
+
+
+
+# code aacording to the questions
+```{r}
+# Filter books published after 2000
+# Merge with user info
+merged_df <- merge(rating_df, user_df, by = "User.ID")
+merged_df <- merge(merged_df, book_df[, c("ISBN", "Year.Of.Publication", "Publisher", "Book.Title")], by = "ISBN")
+post2000_df <- merged_df %>%
+  filter(Year.Of.Publication > 2000, !is.na(Age), !is.na(Book.Rating))
+# Create AgeGroup column
+post2000_df$AgeGroup <- cut(post2000_df$Age, 
+                             breaks = c(0, 18, 25, 35, 50, 65, 100), 
+                             labels = c("0-18", "19-25", "26-35", "36-50", "51-65", "66+"), 
+                             right = FALSE)
+set.seed(123)
+#randomly slpit the dataset into two parts
+random_split <- sample(1:nrow(post2000_df), size = 0.5 * nrow(post2000_df))
+df_A <- post2000_df[random_split, ]
+df_B <- post2000_df[-random_split, ]
+#calculate average rating of per age group A
+avg_rating_A <- df_A %>%
+  group_by(AgeGroup) %>%
+  summarise(AvgRating = mean(Book.Rating), Count = n())
+#calculate average rating of per age group B
+avg_rating_B <- df_B %>%
+  group_by(AgeGroup) %>%
+  summarise(AvgRating = mean(Book.Rating), Count = n())
+print(avg_rating_A)
+```
+
+#print rating average RatingPGB
+```{r}
+print(avg_rating_B)
+```
+
+
+# visualize the results with remove NA values
+```{r}
+# Add labels to distinguish datasets
+avg_rating_A$Dataset <- "Dataset A"
+avg_rating_B$Dataset <- "Dataset B"
+# Combine for plotting
+combined_avg <- rbind(avg_rating_A, avg_rating_B)
+#removed NA value
+combined_avg <- na.omit(combined_avg)  # removes any rows with NA in any column
+#plot the results
+ggplot(combined_avg, aes(x = AgeGroup, y = AvgRating, fill = Dataset)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.70), width = 0.5) +
+  geom_text(aes(label = round(AvgRating, 2)),
+            position = position_dodge(width = 0.70),
+            vjust = -0.4,
+            size = 3.5,
+            color = "#005d5d") +
+  scale_fill_manual(values = c("Dataset A" = "#f1c21b", "Dataset B" = "#ff832b")) +
+  labs(
+    title = "Average Book-Rating by Age Group (Books Published After 2000)",
+    subtitle = "Comparison Between Two Dataset (A and B)",
+    x = "Age Group",
+    y = "Average Rating",
+    fill = "Dataset: "
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(size = 13),
+    legend.position = "top",
+    axis.text.x = element_text(face = "bold"),
+    axis.text.y = element_text(face = "bold")
+  ) +
+  ylim(0, max(combined_avg$AvgRating, na.rm = TRUE) + 1)
+
+```
+
+# Analysis part
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
