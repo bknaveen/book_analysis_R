@@ -133,27 +133,27 @@ kable(top20_publishers, caption = "Top 20 Publishers by Average Rating")
 ```
 
 
-# Visualize the results using bar plot
+# visualize the results using bar plot
 ```{r}
-# Top 10 publishers by number of ratings (for bar chart)
+# top 10 publishers by number of ratings (for bar chart)
 top10_by_count <- publisher_stats %>%
   slice_max(order_by = RatingCount, n = 10) #slice() sleect highest row with specific values
 #create a ggplot object with 'top10_by_count' dataset
 ggplot(top10_by_count, aes(x = reorder(Publisher, AvgRating), y = AvgRating, fill = Publisher)) +
   geom_bar(stat = "identity", width = 0.6) +
   geom_text(aes(label = round(AvgRating, 2)), hjust = -0.1, size = 3.5, color = "black") +
-  coord_flip() +  # Flip x and y to make horizontal bars
+  coord_flip() +  # flip x and y to make horizontal bars
   labs(title = "Top 10 Publishers with most ratings (RatingPGA)",
     x = "Publisher",
     y = "Average Rating"
   ) +
   theme_minimal(base_size = 13) +
   theme(
-    legend.position = "none",  # remove legend (redundant)
+    legend.position = "none",  # Remove legend (redundant)
     plot.title = element_text(hjust = 0.5),
     axis.text.y = element_text(size = 10)
   ) +
-  scale_y_continuous(limits = c(0, 10), expand = expansion(mult = c(0, 0.05)))
+  scale_y_continuous(limits = c(0, 10), expand = expansion(mult = c(0, 0.05))) #customzied the y-axis of the plot
 ```
 
 # analysis of this part
